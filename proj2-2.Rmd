@@ -1,0 +1,230 @@
+---
+title: "Assignment 2 - Part 2"
+author: "Jin & Adam"
+date: "April 20, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+Application Programming Interfaces (API) is a set of prebuilt protocols and tools for building application software that links to another existing app. It provides a building block that can be easily plugged into place in other apps to provide linked functionality. For example, many services and websites let you create/login to an account based on your google account. This is an example where google releases an account API which is built into the website.
+
+Often these APIs will querry servers of those who have released it, like in our example above. You send a request to the website, who sends a similar one to googles sever. Google responds to the website and gives it access needed to log you in. From your side however, everything after your initial request to the website does not exist. 
+
+## Cymon-Python
+
+During our ivenstigation we came across the open source Python library for the Cymon.io API which allows us to build a Python script to perform Cymon API requests without having to deal with sending HTTP GET or POST requests. The functions implemented in the library are based on the Cymon v1 APIs and all API responses are returned in a JSON format.
+
+* ip_lookup()
+API request sends an IP lookup request and returns information about the IP.
+The body of the API response will always contain the following:
+addr: The requested IP address
+created: The creation date of the entry
+updated: The last updated date of the entry
+sources: A list of trusted domains that queried this IP address.
+events: A URL link to events related to this IP.
+domains: A URL link to domains associated with this IP.
+urls: A URL link to URLs associated with this IP.
+
+* ip_events()
+API request that sends a request for all security events related to the IP.
+count: The count of the number of json entries found in results.
+next: Always returns null.
+previous: Always returns null.
+results: Each result is stored in a numbered dictionary table with the numbering count starting at 0. Each dictionary entry countains the following keys;
+title: The name of the event.
+description: A description of the event if included in the event submission, it can be null.
+details_url: The URL of the event report, it can be null.
+created: The date that the report was created.
+updated: The date that the report was updated.
+tag: The tag name of the report. These tags fall under one of these cateogries malware, botnet, spam, phishing, malicious activity, blacklist, dnsbl.
+
+* ip_domains()
+API request that sends request for all domains associated with the IP.
+count: The total count of all associated domains.
+next: Always returns null
+previous: Always return null
+results: Each result is stored in a numbered dictionary table with the numbering count starting at 0. Each dictionary entry countains the following keys;
+name: The name of the domain associated with the IP
+created: The date the entry was created.
+updated: The date the entry was updated.
+
+* ip_urls()
+API request that sends a request for all URLs that are associated with an IP.
+count: The total number of URLs related to the IP.
+next: Always returns null.
+previous: Alway return null.
+results: Each result is stored in a numbered dictionary table with the numbering count starting at 0. Each dictionary entry countains the following keys;
+location: The full URL associated to the IP.
+created: The date the entry was created.
+updated: The date the entry was last updated.
+
+With this we created a script that uses them to grab the required data and dump the it into a json file. You can see that code below. Once this code was made, it was simple to send a number of queires and get the appropriate results back
+
+* domain_lookup
+API requests that sends a request for information related to the requested domain.
+name: The domain of the requested IP.
+created: The date this entry was created.
+updated: The date this entry was last updated.
+source: A dictionary containing all sources used in the lookup.
+ips: The dictionary containing a URL for the associated IP to the domain.
+urls: The dictionary containing all the URL for all the associated URL to the domain.
+
+**cymon-gather.py**
+from cymon import Cymon  
+import json  
+import urllib.parse  
+
+api = Cymon('19cbd68f36262f4d7a934e24db45b09944b57ca7')  
+
+def ip_lookup():  
+    usr = input("Enter IP for IP object details:")  
+    f = open("cymon_api","w")
+    f.write(json.dumps(api.ip_lookup(usr)))  
+def ip_events():  
+    usr = input("Enter IP to get security event resources:")  
+    f = open("cymon_api","w")  
+    f.write(json.dumps(api.ip_events(usr)))  
+def ip_domains():  
+    usr = input("Enter IP to get domains associated with an IP:")  
+    f = open("cymon_api","w")  
+    f.write(json.dumps(api.ip_domains(usr)))  
+def ip_urls():  
+    usr = input("Enter URL to get associated IP(s):")  
+    f = open("cymon_api","w")  
+    f.write(json.dumps(api.ip_urls(urllib.parse.quote(usr,safe=''))))  
+def ip_blacklist():  
+    usr = input("Enter tag to retrieve list of IPs that are associated with {malware, botnet, spam, phishing, malicious activity, blacklist, dnsbl}:")  
+    f = open("cymon_api","w")  
+    f.write(json.dumps(api.ip_blacklist(usr)))  
+def domain_lookup():  
+    usr = input("Enter domain name to get domain object detail:")  
+    f = open("cymon_api","w")  
+    f.write(json.dumps(api.domain_lookup(usr)))  
+def domain_blacklist():  
+    usr = input("Enter tag to retrieve list of domains that are associated with {malware,   botnet, spam, phishing, malicious activity, blacklist, dnsbl}:")  
+    f = open("cymon_api","w")  
+    f.write(json.dumps(api.domain_blacklist(usr)))  
+def url_lookup():  
+    usr = input("Enter URL to get security events resource:")  
+    f = open("cymon_api","w")  
+    f.write(json.dumps(api.url_lookup(urllib.parse.quote(usr,safe=''))))  
+  
+OptionSelect = {  
+    1: ip_lookup,  
+    2: ip_events,  
+    3: ip_domains,  
+    4: ip_urls,  
+    5: ip_blacklist,  
+    6: domain_lookup,  
+    7: domain_blacklist,  
+    8: url_lookup,  
+    0: quit  
+}  
+  
+selection = 9  
+  
+while (selection != 0):  
+      
+    print("1: ip_lookup")  
+    print("2: ip_events")  
+    print("3: ip_domains")  
+    print("4: ip_urls")  
+    print("5: ip_blacklist")  
+    print("6: domain_lookup")  
+    print("7: domain_blacklist")  
+    print("8: url_lookup")  
+    print("0: quit")  
+    selection = int(input("Selection Option:"))  
+    if (selection >= 0) and (selection <= 8):  
+        OptionSelect[selection]()  
+  
+
+## How to use each API request
+ip_lookup
+This API request is useful to identify if the requested IP is registered in the database. If the API returns Null, we can assume that there is no information avaliable about this IP. 
+ip_events
+
+This API request is useful to identiy the type of activity that is tied to this IP address. The type of activties that are recorded are malware, botnet, spam, phishing, malicious activity, blacklist or dnsbl.
+
+ip_domains
+This API request will help map the domains that are associcated with the IP address, it can help identity a naming trend or potentially a targeted attack.
+
+ip_urls
+This API request returns the URL of malicious activity and provide a direct link to a payload that can be used in analysis.
+
+domain_lookup
+This API request is useful to if only if you only have a domain to work with and wish to gather more information such as URLs or IPs.
+
+## Setup
+```{r reading, echo=FALSE}
+library("RJSONIO")
+setwd("F:/IFS/SRT411/Assignment 2")
+```
+
+## Reading our data
+```{r reading, echo=FALSE}
+#importing ip_lookup calls
+ip_lookup1 <- fromJSON("ip_lookup/api1")
+ip_lookup1 <- lapply(ip_lookup1, function(x) {
+    x[sapply(x, is.null)] <- NA
+    unlist(x)
+})
+temp <-as.data.frame(do.call("cbind", ip_lookup1))
+ip_lookup <- rbind(ip_lookup, temp)
+
+ip_lookup2 <- fromJSON("ip_lookup/api2")
+ip_lookup3 <- fromJSON("ip_lookup/api3")
+ip_lookup4 <- fromJSON("ip_lookup/api4")
+ip_lookup5 <- fromJSON("ip_lookup/api5")
+ip_lookup6 <- fromJSON("ip_lookup/api6")
+ip_lookup7 <- fromJSON("ip_lookup/api7")
+ip_lookup8 <- fromJSON("ip_lookup/api8")
+ip_lookup9 <- fromJSON("ip_lookup/api9")
+ip_lookup10 <- fromJSON("ip_lookup/api10")
+
+#importing ip_url calls
+ip_urls1 <- fromJSON("ip_urls/api1")
+ip_urls2 <- fromJSON("ip_urls/api2")
+ip_urls3 <- fromJSON("ip_urls/api3")
+ip_urls4 <- fromJSON("ip_urls/api4")
+ip_urls5 <- fromJSON("ip_urls/api5")
+ip_urls6 <- fromJSON("ip_urls/api6")
+ip_urls7 <- fromJSON("ip_urls/api7")
+ip_urls8 <- fromJSON("ip_urls/api8")
+ip_urls9 <- fromJSON("ip_urls/api9")
+ip_urls10 <- fromJSON("ip_urls/api10")
+
+#importing ip_events calls
+ip_events1 <- fromJSON("ip_events/api1")
+ip_events2 <- fromJSON("ip_events/api2")
+ip_events3 <- fromJSON("ip_events/api3")
+ip_events4 <- fromJSON("ip_events/api4")
+ip_events5 <- fromJSON("ip_events/api5")
+ip_events6 <- fromJSON("ip_events/api6")
+ip_events7 <- fromJSON("ip_events/api7")
+ip_events8 <- fromJSON("ip_events/api8")
+ip_events9 <- fromJSON("ip_events/api9")
+ip_events10 <- fromJSON("ip_events/api10")
+
+#importing ip_domains calls
+ip_domains1 <- fromJSON("ip_domains/api1")
+ip_domains2 <- fromJSON("ip_domains/api2")
+ip_domains3 <- fromJSON("ip_domains/api3")
+ip_domains4 <- fromJSON("ip_domains/api4")
+ip_domains5 <- fromJSON("ip_domains/api5")
+ip_domains6 <- fromJSON("ip_domains/api6")
+ip_domains7 <- fromJSON("ip_domains/api7")
+ip_domains8 <- fromJSON("ip_domains/api8")
+ip_domains9 <- fromJSON("ip_domains/api9")
+ip_domains10 <- fromJSON("ip_domains/api10")
+```
+
+## Working with the data
+```{r reading, echo=FALSE}
+ip_lookup1
+```

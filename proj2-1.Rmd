@@ -1,0 +1,94 @@
+---
+title: "Assignment 2 - Part 1"
+author: "Jin & Adam"
+date: "April 20, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Setup & Preamble
+While a large amount of data is certainly an asset, it is worthless without the ability to interpret and gather knowledge and insight from it. Knowledge and insight is what is actually needed to make the key descions in buissiness, for raw data (especially in the amounts we are dealing with) is completely unusable.
+
+In order to aid this transition, one of the best tools we have is graphs. They take vast sums of data we could never read and condenses them down into one, easy to read graphic that is immedietly recongizable. This path is more difficult that one might think though. Everything from scale, color assigment and what sort of graph chosen can decrease the accuracy and readability of your graph. 
+
+To aid in this, we have followed a proccess known as the Information Visualization Process. The 6 steps of this proccess are as follows:  
+1)Define the Problem  
+2)Assess availible data  
+3)Process Information  
+4)Visual Transformation  
+5)View Transformation  
+6)Interpret and Decide  
+
+In each section we will go into more detail as to what these steps involve. The data was have chosen to use is a wireshark capture of a host that is performing a number of scans.
+
+
+## Step 1: Define the Problem
+In this step we define what we are interested in and what questions we need to answer.
+
+We are specfically interested in finding what scans cause the most amount of traffic. A large amount of traffic in a short time is the best way to be seen, so in our future endevors as possible red Team/Pen Testers we would like to know what is our best choice for scanning. All of these scans were given the same target network and same parameters.
+
+## Step 2: Assess availble data
+In this step we ask what data is availible, what logs will we be drawing on and do we need additional data. This is all done from the point of view of trying to get to the goal defined in step 1
+
+As we have direct captures of the data, we do not need any additional data or resources. The pcap should have all the information we need. 
+
+## Step 3: Proccess Information
+Here the log files or raw data need to be parsed and filtered to extract nessecary data.
+
+As it is in a pcap file, we needed to transfer it to a readable format. To do so we used the following code
+
+ tcpdump -ttttnnr capture.pcap > log
+ 
+From here it was simple to read it into r. First we filtered out all network traffic that does not have a source address of the computer that was doing the scanning. We then moved to characterise of a packet was part of a scan based on the flags set in the packet.
+* Null Scans have no flags set
+* Xmas Scans have only the Fin, Psh and Urg flag set
+* Syn scans only have the Syn flag set
+* Ack scans only have the Ack flag set
+
+We sorted each row into one of these catagories based on the flags we saw below:
+```{r process,tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+dat <- read.csv("/root/Desktop/R/proj2/scanlogs")
+dat <- dat[dat$Source =="192.168.140.151",]
+
+Ncount <- subset(dat, SYN=="Not set" & ACK=="Not set" & FIN=="Not set" & URG=="Not set" & PSH=="Not set" & RST=="Not set")
+
+Xcount <- subset(dat, SYN=="Not set" & ACK=="Not set" & FIN=="Set" & URG=="Set" & PSH=="Set" & RST=="Not set")
+
+Scount <- subset(dat, SYN=="Set" & ACK=="Not set" & FIN=="Not set" & URG=="Not set" & PSH=="Not set" & RST=="Not set")
+
+Acount <- subset(dat, SYN=="Not set" & ACK=="Set" & FIN=="Not set" & URG=="Not set" & PSH=="Not set" & RST=="Not set")
+```
+
+## Step 4: Visual Transformation
+Here we begin working with graphs and plots, focusing on counting how many of each scans we saw. We took a count of how many packets were in each subcatagory, and graphed it below:
+```{r transform, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+counts <- c(nrow(Ncount), nrow(Xcount), nrow(Scount), nrow(Acount))
+names(counts) <- c("Null Scans", "Xmas Scans", "Syn Scans", "Ack Scans")
+barplot(counts)
+```
+
+## Step 5: View Transformation
+Here we make nessecary alterations to graphs, including changing scale or colour, as well as clipping the graph to highlight important parts. Immedietly we realized that just counting flags is useless when it comes to actually identifying scans. When looking at our graph it does not represent our data very well, and is hard to read. To compensate we:
+* Added Colours
+* Added Labels
+* Added a Title
+* Added a Legend
+Expanded the y axis
+
+We had issues getting each bar to also display the total number in it, so have printed out the total under the graph
+```{r view, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+barplot(counts, main="# of Scans Captured", ylab="# of Scans", xlab="Type of Scan", col=c("red", "blue", "green", "purple"), legend.text=rownames(counts), ylim=c(0,1.2*max(counts)))
+
+counts
+```
+
+## Step 6: Interpret and Decide
+This last step is where we decide if we have met our objectives, and if so we can move on to using our new knowledge to make buissiness decisions.
+
+It appears we have had excellent sucsess identifying a which scan uses the least packets. Overall it is best to use a Syn scan. This is backed up by the nmap website itself(https://nmap.org/book/man-port-scanning-techniques.html), who recommends it as the fastest and stealthiest option. Even better, Syn scans have a the same signature as a host attempting to open a connection to a port.
+```{r define}
+```

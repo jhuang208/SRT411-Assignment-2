@@ -166,65 +166,99 @@ library("RJSONIO")
 setwd("F:/IFS/SRT411/Assignment 2")
 ```
 
-## Reading our data
-```{r reading, echo=FALSE}
+## Reading our ip_lookup data
+```{r ip_lookup, echo=FALSE}
 #importing ip_lookup calls
-ip_lookup1 <- fromJSON("ip_lookup/api1")
-ip_lookup1 <- lapply(ip_lookup1, function(x) {
-    x[sapply(x, is.null)] <- NA
-    unlist(x)
+ip_lookup <- data.frame()
+tmp <- lapply(fromJSON("ip_lookup/api1"), function(x) {
+  x[sapply(x, is.null)] <- NA
+  unlist(x)
 })
-temp <-as.data.frame(do.call("cbind", ip_lookup1))
-ip_lookup <- rbind(ip_lookup, temp)
+tmp <- as.data.frame(do.call("cbind", tmp))
+ip_lookup <- rbind(ip_lookup, tmp)
 
-ip_lookup2 <- fromJSON("ip_lookup/api2")
-ip_lookup3 <- fromJSON("ip_lookup/api3")
-ip_lookup4 <- fromJSON("ip_lookup/api4")
-ip_lookup5 <- fromJSON("ip_lookup/api5")
-ip_lookup6 <- fromJSON("ip_lookup/api6")
-ip_lookup7 <- fromJSON("ip_lookup/api7")
-ip_lookup8 <- fromJSON("ip_lookup/api8")
-ip_lookup9 <- fromJSON("ip_lookup/api9")
-ip_lookup10 <- fromJSON("ip_lookup/api10")
+tmp <- lapply(fromJSON("ip_lookup/api2"), function(x) {
+  x[sapply(x, is.null)] <- NA
+  unlist(x)
+})
+tmp <- as.data.frame(do.call("cbind", tmp))
+ip_lookup <- rbind(ip_lookup, tmp)
 
-#importing ip_url calls
-ip_urls1 <- fromJSON("ip_urls/api1")
-ip_urls2 <- fromJSON("ip_urls/api2")
-ip_urls3 <- fromJSON("ip_urls/api3")
-ip_urls4 <- fromJSON("ip_urls/api4")
-ip_urls5 <- fromJSON("ip_urls/api5")
-ip_urls6 <- fromJSON("ip_urls/api6")
-ip_urls7 <- fromJSON("ip_urls/api7")
-ip_urls8 <- fromJSON("ip_urls/api8")
-ip_urls9 <- fromJSON("ip_urls/api9")
-ip_urls10 <- fromJSON("ip_urls/api10")
+tmp <- lapply(fromJSON("ip_lookup/api3"), function(x) {
+  x[sapply(x, is.null)] <- NA
+  unlist(x)
+})
+tmp <- as.data.frame(do.call("cbind", tmp))
+ip_lookup <- rbind(ip_lookup, tmp)
 
-#importing ip_events calls
-ip_events1 <- fromJSON("ip_events/api1")
-ip_events2 <- fromJSON("ip_events/api2")
-ip_events3 <- fromJSON("ip_events/api3")
-ip_events4 <- fromJSON("ip_events/api4")
-ip_events5 <- fromJSON("ip_events/api5")
-ip_events6 <- fromJSON("ip_events/api6")
-ip_events7 <- fromJSON("ip_events/api7")
-ip_events8 <- fromJSON("ip_events/api8")
-ip_events9 <- fromJSON("ip_events/api9")
-ip_events10 <- fromJSON("ip_events/api10")
+tmp <- lapply(fromJSON("ip_lookup/api4"), function(x) {
+  x[sapply(x, is.null)] <- NA
+  unlist(x)
+})
+tmp <- as.data.frame(do.call("cbind", tmp))
+ip_lookup <- rbind(ip_lookup, tmp)
 
-#importing ip_domains calls
-ip_domains1 <- fromJSON("ip_domains/api1")
-ip_domains2 <- fromJSON("ip_domains/api2")
-ip_domains3 <- fromJSON("ip_domains/api3")
-ip_domains4 <- fromJSON("ip_domains/api4")
-ip_domains5 <- fromJSON("ip_domains/api5")
-ip_domains6 <- fromJSON("ip_domains/api6")
-ip_domains7 <- fromJSON("ip_domains/api7")
-ip_domains8 <- fromJSON("ip_domains/api8")
-ip_domains9 <- fromJSON("ip_domains/api9")
-ip_domains10 <- fromJSON("ip_domains/api10")
+tmp <- lapply(fromJSON("ip_lookup/api5"), function(x) {
+  x[sapply(x, is.null)] <- NA
+  unlist(x)
+})
+tmp <- as.data.frame(do.call("cbind", tmp))
+ip_lookup <- rbind(ip_lookup, tmp)
+
+tmp <- lapply(fromJSON("ip_lookup/api6"), function(x) {
+  x[sapply(x, is.null)] <- NA
+  unlist(x)
+})
+tmp <- as.data.frame(do.call("cbind", tmp))
+ip_lookup <- rbind(ip_lookup, tmp)
+
+tmp <- lapply(fromJSON("ip_lookup/api7"), function(x) {
+  x[sapply(x, is.null)] <- NA
+  unlist(x)
+})
+tmp <- as.data.frame(do.call("cbind", tmp))
+ip_lookup <- rbind(ip_lookup, tmp)
+
+tmp <- lapply(fromJSON("ip_lookup/api8"), function(x) {
+  x[sapply(x, is.null)] <- NA
+  unlist(x)
+})
+tmp <- as.data.frame(do.call("cbind", tmp))
+ip_lookup <- rbind(ip_lookup, tmp)
+
+tmp <- lapply(fromJSON("ip_lookup/api9"), function(x) {
+  x[sapply(x, is.null)] <- NA
+  unlist(x)
+})
+tmp <- as.data.frame(do.call("cbind", tmp))
+ip_lookup <- rbind(ip_lookup, tmp)
+
+tmp <- lapply(fromJSON("ip_lookup/api10"), function(x) {
+  x[sapply(x, is.null)] <- NA
+  unlist(x)
+})
+tmp <- as.data.frame(do.call("cbind", tmp))
+ip_lookup <- rbind(ip_lookup, tmp)
 ```
+
 
 ## Working with the data
 ```{r reading, echo=FALSE}
-ip_lookup1
+library('plyr')
+summary(as.data.frame(ip_lookup))
+
+#Top5 frequent sources for all IP lookups.
+head(count(as.data.frame(ip_lookup$sources)),5)
+
+#The max number of sources from the API requests
+max(table(ip_lookup$sources))
+
+#The average number of sources from the API requests
+mean(table(ip_lookup$sources))
+
+#The min number of sources from the API requests
+min(table(ip_lookup$sources))
+
+#Plotting the sources
+barplot(table(ip_lookup$sources),horiz = TRUE, xlab = "Frequency",main="IP lookup Sources", las = 1)
 ```
